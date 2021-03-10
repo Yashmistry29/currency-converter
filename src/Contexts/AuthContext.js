@@ -1,6 +1,5 @@
 import React, { useContext, useState, useEffect } from "react";
-import { Redirect, Link } from "react-router-dom";
-import { auth } from "../firebase";
+import { auth } from "../Firebase";
 
 const AuthContext = React.createContext();
 
@@ -20,28 +19,24 @@ export function AuthProvider({ children }) {
         const val = {
           Name:name,
           Mobile:mobile,
-          Email:email
+          Email:email,
         }
-        return localStorage.setItem(cred.user.uid,JSON.stringify(val))
+        const user=cred.user.uid;
+        return (localStorage.setItem(user,JSON.stringify(val)));
+        })
+        .catch(function (err) {
+          console.log("SIGNUP ERROR", err);
+        });
   }
-
   function signin(email, password) {
     return auth
       .signInWithEmailAndPassword(email, password)
-      .then(async (cred) => {
-        await db
-          .collection("users")
-          .doc(cred.user.uid)
-          .get()
-          .then((doc) => {
-            return <Redirect to="/dashboard" />;
-          });
-        /*.catch((err) => {
-            console.error("ROLE ERROR", err);
-          });*/
+      .then((cred)=>{
+        const data=localStorage.getItem(cred.user.uid);
+        return(JSON.parse(data));
       })
-      .catch((err) => {
-        console.error("SIGNIN ERROR", err);
+      .catch(function (err) {
+        console.log("SIGNIN ERROR", err);
       });
   }
 

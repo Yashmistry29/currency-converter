@@ -8,12 +8,13 @@ import {
   Typography,
   Button,
   Grid,
-  Divider,
   makeStyles,
 } from "@material-ui/core";
 import LockIcon from "@material-ui/icons/Lock";
 import AlternateEmailIcon from "@material-ui/icons/AlternateEmail";
 import bk from "../Background/bk.png";
+import validate from '../validation/SigninValidation';
+import useForm from '../hooks/SigninHooks';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -61,12 +62,12 @@ const useStyles = makeStyles((theme) => ({
   },
 }));
 
-export default function Signin() {
+export default function Signin(props) {
   const classes = useStyles();
-  // const { inputs, handleInputChange, handleSubmit, errors } = useForm(
-  //   { props: props, email: "", password: "" },
-  //   validate
-  // );
+  const { inputs, handleInputChange, handleSubmit, errors } = useForm(
+    { props: props, email: "", password: "" },
+    validate
+  );
 
   const logo = () => {
     return (
@@ -107,7 +108,7 @@ export default function Signin() {
                 </Typography>
               </Grid>
               <Grid item>
-                <form className={classes.form}>
+                <form className={classes.form} onSubmit={handleSubmit}>
                   <TextField
                     variant="outlined"
                     margin="normal"
@@ -115,10 +116,10 @@ export default function Signin() {
                     fullWidth
                     name="email"
                     label="Email Address"
-                    // value={inputs.email || ""}
+                    value={inputs.email || ""}
                     autoFocus
-                    // onChange={handleInputChange}
-                    // {...(errors.email && {error:true,helperText:errors.email})}
+                    onChange={handleInputChange}
+                    {...(errors.email && {error:true,helperText:errors.email})}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
@@ -135,9 +136,9 @@ export default function Signin() {
                     label="Password"
                     type="password"
                     name="password"
-                    // value={inputs.password || ""}
-                    // onChange={handleInputChange}
-                    // {...(errors.password && {error:true,helperText:errors.password})}
+                    value={inputs.password || ""}
+                    onChange={handleInputChange}
+                    {...(errors.password && {error:true,helperText:errors.password})}
                     InputProps={{
                       startAdornment: (
                         <InputAdornment position="start">
