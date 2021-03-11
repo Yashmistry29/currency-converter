@@ -1,4 +1,5 @@
-import React,{useState,useEffect} from 'react'
+/* eslint-disable array-callback-return */
+import React,{useState} from 'react'
 import { 
   makeStyles,
   AppBar,
@@ -7,11 +8,15 @@ import {
   Button,
   Grid,
   Paper,
-  TextField, 
-  IconButton,
+  TextField,
+  Modal,
+  InputAdornment,
+  Checkbox,
+  FormControlLabel
 } from '@material-ui/core';
 import bk from '../Background/BK1.jpg'
-import RemoveCircleOutlineIcon from '@material-ui/icons/RemoveCircleOutline';
+import MoneyIcon from '@material-ui/icons/Money';
+import { useAuth } from '../Contexts/AuthContext';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -24,7 +29,7 @@ const useStyles = makeStyles((theme) => ({
     fontFamily: "Abril Fatface",
   },
   paper: {
-    margin: theme.spacing(1,2),
+    margin: theme.spacing(1),
     padding: theme.spacing(5),
     alignItems: "center",
   },
@@ -48,39 +53,88 @@ const useStyles = makeStyles((theme) => ({
       margin: theme.spacing(1),
       width: '25ch',
     },
-  }
+  },
+  modal: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  paper1: {
+    backgroundColor: theme.palette.background.paper,
+    border: '2px solid #000',
+    boxShadow: theme.shadows[5],
+    padding: theme.spacing(2, 4, 3),
+    color:'#000000'
+  },
 }));
 
 export default function CurrencyConverter(props) {
   const classes = useStyles();
-  const [loaded,setLoaded]=useState(false);
-  const [baseCurrency,setBaseCurrency]=useState('')
-  const [rateList,setRateList]=useState([{}]);
+  const {logout} = useAuth();
+  const [open,setOpen]=useState(false);
+  const [amount,setAmount]=useState('');
+  const result=[];
+  const checkedList=[];
+  
+  const openModal=()=>{
+    window.open('https://api.exchangeratesapi.io/latest','_blank')
+  }
 
-  useEffect(() => {
-    fetch("https://api.exchangeratesapi.io/latest")
+  const handleClose=()=>{
+    setOpen(false);
+  }
+
+  const CalculateResult=()=>{
+    setOpen(true);
+    const base=localStorage.BaseCurrency;
+    const rate= JSON.parse(localStorage.baseRates);
+    console.log(checkedList);
+    console.log(amount);
+    checkedList.map((item)=>(
+      Object.keys(rate).map((k)=>{
+        if(item===k){
+          var total=amount*rate[k]; 
+          var string=amount+'('+base+')=>'+total+'('+item+')';
+          result.push(string);
+        }
+      })
+    ))
+    localStorage.setItem('Result',JSON.stringify(result));
+    console.log(result);
+  }
+
+  const handleChange=(e)=>{
+    e.preventDefault()
+    const baseCurrency=e.target.value;
+    localStorage.setItem('BaseCurrency',baseCurrency);
+    var url;
+    if(e.target.value==="EUR"){
+      url='https://api.exchangeratesapi.io/latest';
+    }else{
+      url='https://api.exchangeratesapi.io/latest?base='+baseCurrency;
+    }
+    fetch(url)
     .then(res=>res.json())
     .then((result)=>{
-      setLoaded(true);
-      setBaseCurrency(result.base)
-      localStorage.setItem("rates",JSON.stringify(result.rates));
+      localStorage.setItem('baseRates',JSON.stringify(result.rates));
     }).catch((error)=>{
-      console.log("Errors:",error)
+      console.log("errors",error);
     })
-  }, [])
-
-  const removeItem =()=>{
-    console.log("success")
   }
 
-  const AddCurrency =()=>{
-    console.log("Add Currency");
+  const handleInputChange=(e)=>{
+    setAmount(e.target.value);
   }
 
-  const CalculateResult =()=>{
-    console.log("Result Calculated")
+  const handleCheckBox=(e)=>{
+    e.preventDefault();
+    checkedList.push(e.target.value);
   }
 
+  const Logout =()=>{
+    logout();
+    props.history.push('/signin');
+  }
   return (
     <React.Fragment>
       <div className={classes.image}>
@@ -89,23 +143,23 @@ export default function CurrencyConverter(props) {
             <Typography variant="h4" className={classes.title}>
               Currency Converter
             </Typography>
-            <Button color="inherit">Logout</Button>
+            <Button color="inherit" onClick={openModal}>Conversion Rates</Button>
+            <Button color="inherit" onClick={Logout}>Logout</Button>
           </Toolbar>
         </AppBar>
-        <Grid container xs={12} direction="column" justify="center" alignItems="center" spacing={3} className={classes.root}>
+        <Grid container direction="column" justify="center" alignItems="center" spacing={3} className={classes.root}>
           <Paper className={classes.paper}>
-            <Grid item xs>
+            <Grid item xs >
               <Grid container direction="row" justify="center" alignItems="center" spacing={3}>
                 <Grid item>
-                  <IconButton onClick={removeItem}>
-                    <RemoveCircleOutlineIcon fontSize="medium" color="primary"/>
-                  </IconButton>
-                </Grid>
-                <Grid item>
                   <TextField
+                    label="Enter Amount"
                     variant="outlined"
-                    label="Value"
+                    required
+                    autoFocus
                     defaultValue={1}
+                    value={amount}
+                    onChange={(e)=>handleInputChange(e)}
                   />
                 </Grid>
                 <Grid item className={classes.select}>
@@ -113,57 +167,61 @@ export default function CurrencyConverter(props) {
                     id="outlined-select-currency-native"
                     select
                     label="Currencies"
-                    // value={currency}
-                    // onChange={handleChange}
+                    defaultValue='EUR'
+                    onChange={(e)=>handleChange(e)}
+                    InputProps={{
+                      startAdornment: (
+                        <InputAdornment position="start">
+                          <MoneyIcon/>
+                        </InputAdornment>
+                      ),
+                    }}
                     SelectProps={{
                       native: true,
                     }}
                     // helperText="Please select your currency"
                     variant="outlined"
                   >
-                    {/* {currencies.map((option) => (
-                      <option key={option.value} value={option.value}>
-                        {option.label}
-                      </option>
-                    ))} */}
+                    <option value="EUR">EUR</option>
+                    { 
+                    // options
+                      Object.keys(JSON.parse(localStorage.getItem('rates'))).map((option,index) => (
+                        <option key={index} value={option}>
+                          {option}
+                        </option>
+                      ))
+                    }
                   </TextField>
                 </Grid>
               </Grid>
             </Grid>
-            <Grid item xs>
-              <Grid container direction="row" justify="center" alignItems="center" spacing={3}>
-                <Grid item>
-                <IconButton onClick={removeItem}>
-                    <RemoveCircleOutlineIcon fontSize="medium" color="primary"/>
-                  </IconButton>
+            <Grid item>
+              <Grid container direction="row" alignItems="center" justify="center">
+                <Grid item xs={1} >
+                  <FormControlLabel
+                    control={<Checkbox
+                      name="EUR"
+                      color="primary"
+                      value="EUR"
+                      onChange={(e)=>handleCheckBox(e)}
+                    />}
+                    label="EUR"/>
                 </Grid>
-                <Grid item>
-                  <TextField
-                    variant="outlined"
-                    label="Value"
-                    defaultValue={1}
-                  />
-                </Grid>
-                <Grid item className={classes.select}>
-                <TextField
-                  id="outlined-select-currency-native"
-                  select
-                  label="Currencies"
-                  // value={currency}
-                  // onChange={handleChange}
-                  SelectProps={{
-                    native: true,
-                  }}
-                  // helperText="Please select your currency"
-                  variant="outlined"
-                >
-                  {/* {currencies.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))} */}
-                </TextField>
-                </Grid>
+                { 
+                  // optionCheckBoxs
+                  Object.keys(JSON.parse(localStorage.getItem('rates'))).map((option)=>(
+                  <Grid item xs={1} >
+                    <FormControlLabel
+                      control={<Checkbox
+                        name={option}
+                        color="primary"
+                        value={option}
+                        onChange={(e)=>handleCheckBox(e)}
+                      />}
+                      label={option}/>
+                  </Grid>
+                ))
+              }
               </Grid>
             </Grid>
             <Grid item xs className={classes.submit}>
@@ -172,14 +230,24 @@ export default function CurrencyConverter(props) {
                   <Button 
                     variant="contained" 
                     color="primary"
-                    onClick={AddCurrency}>Add Currency</Button>
-                </Grid>
-                <Grid item>
-                  <Button 
-                    variant="contained" 
-                    color="primary"
                     onClick={CalculateResult}
                     >Calculate</Button>
+                    <Modal
+                      open={open}
+                      onClose={handleClose}
+                      className={classes.modal}
+                      aria-labelledby="simple-modal-title"
+                      aria-describedby="simple-modal-description"
+                    >
+                      <div style={{minHeight:'200px',}} className={classes.paper1}>
+                        { 
+                        // getResultData
+                          JSON.parse(localStorage.getItem('Result')).map((item)=>(
+                            <Typography variant="h6">{item}</Typography>
+                          ))
+                        }
+                      </div>
+                    </Modal>
                 </Grid>
               </Grid>
             </Grid>
@@ -189,7 +257,3 @@ export default function CurrencyConverter(props) {
     </React.Fragment>
   )
 }
-
-
-            
-            

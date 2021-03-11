@@ -4,7 +4,7 @@ import { useAuth } from '../Contexts/AuthContext'
 const useForm = (initialValues,validate) => {
 	const [inputs,setInputs] = useState(initialValues);
 	const [errors,setErrors] = useState({});
-	const {signin}=useAuth();
+	const {signin,SigninWithGoogle}=useAuth();
 
   
 	const handleSubmit = (event) => {
@@ -27,10 +27,15 @@ const useForm = (initialValues,validate) => {
     	event.persist();
     	setInputs(inputs => ({...inputs, [event.target.name]: event.target.value}));
   	}
-
+	
+	const handleGoogle= () =>{
+		SigninWithGoogle();
+		initialValues.props.history.push("/converter");
+	}
 	return {
     	handleSubmit,
    		handleInputChange,
+			handleGoogle,
     	inputs,
     	errors
   	};

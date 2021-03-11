@@ -1,6 +1,5 @@
-import React from 'react'
+import React,{useEffect} from 'react'
 import { Link } from "react-router-dom";
-import GoogleLogin from 'react-google-login'
 import {
   TextField,
   Paper,
@@ -19,16 +18,11 @@ import useForm from '../hooks/SigninHooks';
 const useStyles = makeStyles((theme) => ({
   root: {
     height: "100vh",
-    // marginTop:theme.spacing(1),
-    // opacity:'0.8'
   },
 
   paper: {
     margin: theme.spacing(1, 5),
     padding: theme.spacing(5),
-    // display: "flex",
-    // flexDirection: "column",
-    // alignItems: "center",
   },
 
   logo: {
@@ -36,7 +30,6 @@ const useStyles = makeStyles((theme) => ({
     fontSize: "35px",
     fontFamily: "Abril Fatface",
     color: "#000000",
-    // fontFamily:theme.typography.fontFamily('')
   },
 
   image: {
@@ -48,26 +41,50 @@ const useStyles = makeStyles((theme) => ({
         : theme.palette.grey[900],
     backgroundSize: "cover",
     backgroundPosition: "center",
-    // opacity:'0.8'
   },
 
   form: {
-    width: "100%", // Fix IE 11 issue.
+    width: "100%", 
     marginTop: theme.spacing(1),
   },
+
   submit: {
     margin: theme.spacing(2, 0, 2),
     alignItems: "center",
-    // background:'#0B75F4'
   },
+
+  google:{
+    margin: theme.spacing(2, 0, 2),
+    alignItems: "center",
+    color:'#ffffff',
+    background:'red',
+  }
 }));
 
 export default function Signin(props) {
   const classes = useStyles();
-  const { inputs, handleInputChange, handleSubmit, errors } = useForm(
+  const { inputs, handleInputChange, handleSubmit, handleGoogle, errors } = useForm(
     { props: props, email: "", password: "" },
     validate
   );
+
+  useEffect(() => {
+    fetch('https://api.exchangeratesapi.io/latest')
+    .then(res=>res.json())
+    .then((result)=>{
+      const base=result.base;
+      const rates=result.rates;
+      const Result=[]
+      localStorage.setItem("BaseCurrency",base);
+      localStorage.setItem('rates',JSON.stringify(rates));
+      Object.keys(rates).map((item)=>(
+        Result.push(item)
+      ));
+      localStorage.setItem('Result',JSON.stringify(Result));
+    }).catch((err)=>{
+      console.log(err);
+    })
+  }, [])
 
   const logo = () => {
     return (
@@ -166,7 +183,6 @@ export default function Signin(props) {
                       variant="contained"
                       color="primary"
                       disableElevation
-                      // disabled={busy}
                       className={classes.submit}
                     >
                       Sign In
@@ -178,9 +194,12 @@ export default function Signin(props) {
                 or
               </Grid>
               <Grid item xs>
-                <GoogleLogin
-                  buttonText="Signin using Google"
-                />
+                <Button 
+                  className={classes.google}
+                  size="large"
+                  variant="contained"
+                  onClick={handleGoogle}
+                  >Signin using Google</Button>
               </Grid>
             </Grid>
           </Paper>

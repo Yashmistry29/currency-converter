@@ -6,7 +6,7 @@ import { useAuth } from '../Contexts/AuthContext'
 const useForm = (initialValues,validate) => {
 	const [inputs,setInputs] = useState(initialValues);
 	const [errors,setErrors] = useState({});
-	const {signup}=useAuth();
+	const {signup,SigninWithGoogle}=useAuth();
 	toast.configure();
 
   
@@ -33,9 +33,14 @@ const useForm = (initialValues,validate) => {
     	setInputs(inputs => ({...inputs, [event.target.name]: event.target.value}));
   	}
 
+		const handleGoogle= () =>{
+			SigninWithGoogle();
+			initialValues.props.history.push("/converter");
+		}
 	return {
     	handleSubmit,
    		handleInputChange,
+			handleGoogle,
     	inputs,
     	errors
   	};

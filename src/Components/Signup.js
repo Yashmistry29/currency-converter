@@ -1,6 +1,5 @@
 import React from 'react'
 import { Link } from "react-router-dom";
-import GoogleLogin from 'react-google-login'
 import {
   TextField,
   Paper,
@@ -39,12 +38,9 @@ const useStyles = makeStyles((theme) => ({
 
   logo: {
     padding: theme.spacing(1, 0, 2, 3),
-    // display: 'flex',
-    // flexDirection: 'column',
     alignItems: "left",
     fontSize: "35px",
     fontFamily: "Abril Fatface",
-    // fontFamily:theme.typography.fontFamily('')
   },
 
   image: {
@@ -68,13 +64,16 @@ const useStyles = makeStyles((theme) => ({
     alignItems: "center",
   },
   google:{
-    padding:theme.spacing(1),
+    margin: theme.spacing(2, 0, 2),
+    alignItems: "center",
+    color:'#ffffff',
+    background:'red',
   }
 }));
 
 export default function Signup(props) {
   const classes = useStyles();
-  const { inputs, handleInputChange, handleSubmit, errors } = useForm(
+  const { inputs, handleInputChange, handleSubmit, handleGoogle, errors } = useForm(
     {
       props: props,
       name: "",
@@ -119,7 +118,7 @@ export default function Signup(props) {
             <Typography variant="body2">
               This is a Web Application which Allows you to Convert One Currency into Other Currencies.<br/>
               For.eg.<br/>
-              <b>Rupees()</b>=><b>Dollars($)</b> and Vice-versa and Many More Currencies
+              <b>Rupees</b>=<b>Dollars</b> and Vice-versa and Many More Currencies
             </Typography>
           </Grid>
         </Grid>
@@ -238,10 +237,13 @@ export default function Signup(props) {
               <Grid item>
                 or
               </Grid>
-              <Grid item className={classes.google}>
-                <GoogleLogin
-                  buttonText="Signup using Google"
-                />
+              <Grid item>
+                <Button 
+                    className={classes.google}
+                    size="large"
+                    variant="contained"
+                    onClick={handleGoogle}
+                    >Signin using Google</Button>
               </Grid>
             </div>
           </Grid>
