@@ -10,7 +10,7 @@ function App() {
     <Router>
       <AuthProvider>
         <Switch>
-          <Route exact path="/" component={Signup}/>
+          <Route exact path="/" component={Signin}/>
           <Route path="/signup" component={Signup}/>
           <Route path="/signin" component={Signin}/>
           <Route path="/converter" component={Converter}/>
