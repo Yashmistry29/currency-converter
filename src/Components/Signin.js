@@ -69,21 +69,8 @@ export default function Signin(props) {
   );
 
   useEffect(() => {
-    fetch('https://api.exchangeratesapi.io/latest')
-    .then(res=>res.json())
-    .then((result)=>{
-      const base=result.base;
-      const rates=result.rates;
-      const Result=[]
-      localStorage.setItem("BaseCurrency",base);
-      localStorage.setItem('rates',JSON.stringify(rates));
-      Object.keys(rates).map((item)=>(
-        Result.push(item)
-      ));
+      const Result=['1','2'];
       localStorage.setItem('Result',JSON.stringify(Result));
-    }).catch((err)=>{
-      console.log(err);
-    })
   }, [])
 
   const logo = () => {

@@ -1,5 +1,5 @@
 /* eslint-disable array-callback-return */
-import React,{useState} from 'react'
+import React,{useState, useEffect} from 'react'
 import { 
   makeStyles,
   AppBar,
@@ -17,6 +17,7 @@ import {
 import bk from '../Background/BK1.jpg'
 import MoneyIcon from '@material-ui/icons/Money';
 import { useAuth } from '../Contexts/AuthContext';
+import { FormatUnderlinedOutlined } from '@material-ui/icons';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -73,9 +74,32 @@ export default function CurrencyConverter(props) {
   const {logout} = useAuth();
   const [open,setOpen]=useState(false);
   const [amount,setAmount]=useState('');
+  const [cRates,setCRates]=useState(['']);
+  const [baseC,setBaseC]=useState('');
+
   const result=[];
   const checkedList=[];
   
+  useEffect(() => {
+    setCRates('');
+    fetch('https://api.exchangeratesapi.io/latest')
+    .then(res=>res.json())
+    .then((result)=>{
+      const base=result.base;
+      const rates=result.rates;
+      setBaseC(base);
+      Object.keys(rates).map((item)=>{
+        setCRates(e=>[...e,item])
+      });
+      cRates.splice()
+      console.log(baseC,cRates);
+      localStorage.setItem("BaseCurrency",base);
+      localStorage.setItem('rates',JSON.stringify(rates));
+    }).catch((err)=>{
+      console.log(err);
+    })
+  }, [])
+
   const openModal=()=>{
     window.open('https://api.exchangeratesapi.io/latest','_blank')
   }
@@ -101,6 +125,22 @@ export default function CurrencyConverter(props) {
     ))
     localStorage.setItem('Result',JSON.stringify(result));
     console.log(result);
+    return(
+      <Modal
+        open={open}
+        onClose={handleClose}
+        className={classes.modal}
+        aria-labelledby="simple-modal-title"
+        aria-describedby="simple-modal-description"
+      >
+        <div style={{minHeight:'200px',}} className={classes.paper1}>
+          {             result.map((item)=>(
+              <Typography variant="h6">{item}</Typography>
+            ))
+          }
+        </div>
+      </Modal>
+    )
   }
 
   const handleChange=(e)=>{
@@ -130,7 +170,7 @@ export default function CurrencyConverter(props) {
     e.preventDefault();
     checkedList.push(e.target.value);
   }
-
+  
   const Logout =()=>{
     logout();
     props.history.push('/signin');
@@ -166,8 +206,8 @@ export default function CurrencyConverter(props) {
                   <TextField
                     id="outlined-select-currency-native"
                     select
-                    label="Currencies"
-                    defaultValue='EUR'
+                    label="From Currencies"
+                    // defaultValue='None'
                     onChange={(e)=>handleChange(e)}
                     InputProps={{
                       startAdornment: (
@@ -182,15 +222,15 @@ export default function CurrencyConverter(props) {
                     // helperText="Please select your currency"
                     variant="outlined"
                   >
-                    <option value="EUR">EUR</option>
                     { 
                     // options
-                      Object.keys(JSON.parse(localStorage.getItem('rates'))).map((option,index) => (
-                        <option key={index} value={option}>
-                          {option}
+                      Object.keys(cRates).map((option,index) => (
+                        <option key={index} value={cRates[option]}>
+                          {cRates[option]}
                         </option>
                       ))
                     }
+                    <option value="EUR">EUR</option>
                   </TextField>
                 </Grid>
               </Grid>
@@ -209,16 +249,16 @@ export default function CurrencyConverter(props) {
                 </Grid>
                 { 
                   // optionCheckBoxs
-                  Object.keys(JSON.parse(localStorage.getItem('rates'))).map((option)=>(
+                  Object.keys(cRates).map((option)=>(
                   <Grid item xs={1} >
                     <FormControlLabel
                       control={<Checkbox
-                        name={option}
+                        name={cRates[option]}
                         color="primary"
-                        value={option}
+                        value={cRates[option]}
                         onChange={(e)=>handleCheckBox(e)}
                       />}
-                      label={option}/>
+                      label={cRates[option]}/>
                   </Grid>
                 ))
               }
@@ -230,6 +270,7 @@ export default function CurrencyConverter(props) {
                   <Button 
                     variant="contained" 
                     color="primary"
+                    type="submit"
                     onClick={CalculateResult}
                     >Calculate</Button>
                     <Modal
@@ -240,12 +281,11 @@ export default function CurrencyConverter(props) {
                       aria-describedby="simple-modal-description"
                     >
                       <div style={{minHeight:'200px',}} className={classes.paper1}>
-                        { 
-                        // getResultData
-                          JSON.parse(localStorage.getItem('Result')).map((item)=>(
+                        { //getResultData 
+                            JSON.parse(localStorage.Result).map((item)=>(
                             <Typography variant="h6">{item}</Typography>
                           ))
-                        }
+                        } 
                       </div>
                     </Modal>
                 </Grid>
